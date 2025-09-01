@@ -1,0 +1,28 @@
+﻿@model List<Blog>
+
+<div class="mainbar">
+    @foreach(var item in Model)
+    {
+        <div class="article">
+            <h2><span>@item.Name</span></h2>
+            <div class="clr"></div>
+            <p><span> @item.PublishDate.ToString("MMMM d\\t\\h , yyyy 'at' h:mm tt")</span> @* Posted by <a href="#">Owner</a *@> @* &nbsp; *@|&nbsp; Etiketler <a href="#">@item.Tags</a></p>
+            <img src=@item.ImageUrl width="625" height="205" alt="" />
+            @{
+                string description = item.Descripton;
+                string newdescription = description.Length > 50 ? description.Substring(0,250) +"..." : description;
+
+            }
+
+            <p>@newdescription</p>
+            <p class="spec"><a href="/Blogs/Details?id=@item.Id" class="rm">Devamı &raquo;</a> 
+                <a href="#" class="com" style="margin-left:10px;"><span>@item.CommentCount</span> Comments</a>
+                @* <a href="#" class="com" style="margin-left:10px;"><span>@item.LikeCount</span> Like</a> *@
+
+                <a href="#" class="com" style="margin-left:10px;"><span>@item.ViewCount</span> View</a>
+
+            </p>
+        </div>
+    }
+    
+</div>
