@@ -1,21 +1,64 @@
-﻿using blogv1.Context;
+﻿using System.Threading.Tasks;
+using blogv1.Context;
+using blogv1.Identity;
 using blogv1.Models;
+using blogv1.Models.ViewModels;
+
+using Microsoft.AspNetCore.Authorization;
+
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace blogv1.Controllers
 {
+    [Authorize]//admıne artık gırıs oyle kolay olmucak
+  //logoutu yazınca bunu actık tekrar
     public class AdminController : Controller
     {
         private readonly BlogDbContext _context;
-
-        public AdminController(BlogDbContext context)
+        //userları ımplamente etme ıcın
+        private readonly UserManager<BlogIdentityUser> _userManager;//basksa bır taban baglantısı ıcın yani
+        //alttakı de gırıs tutacak
+        private readonly SignInManager<BlogIdentityUser> _signInManager;
+        public AdminController(BlogDbContext context, UserManager<BlogIdentityUser> userManager, SignInManager<BlogIdentityUser> signInManager)
         {
             _context = context;
+            _userManager = userManager;//ctrl . ile add parameters dedık
+            _signInManager = signInManager;
         }
 
         public IActionResult Index()
         {
-            return View();
+            var dashboard = new DashboardViewModel();
+
+            var toplamblogsayisi = _context.Blogs.Count();
+            var toplamgoruntulenme = _context.Blogs.Select(x => x.ViewCount).Sum();
+            //var encokgoruntulneneblog = _context.Blogs.OrderByDescending(x => x.ViewCount).FirstOrDefault();
+           // var ensonyayinlananblog = _context.Blogs.OrderByDescending(x => x.PublishDate).FirstOrDefault();
+          //  var toplamyorumsayisi = _context.Comments.Count();
+           // var encokyorumalanblogId = _context.Comments
+                                     //   .GroupBy(x => x.BlogId) // BlogId'ye göre grupla
+                                    //    .OrderByDescending(g => g.Count()) // Grupları yorum sayısına göre azalan sırala
+                                      //  .Select(g => g.Key) // En çok yorumu olan BlogId'yi al
+                                     //   .FirstOrDefault(); // İlk sonucu getir
+            //var encokyorumalanblog = _context.Blogs.Where(x => x.Id == encokyorumalanblogId).FirstOrDefault();
+
+            var bugunyapilanyorumsayisi = _context.Comments.Where(x => x.PublishDate.Date == DateTime.Now.Date).Count();
+
+            dashboard.TotalBlogCount = toplamblogsayisi;
+            dashboard.TotalViewCount = toplamgoruntulenme;
+           // dashboard.MostViewedBlog = encokgoruntulneneblog;
+          //  dashboard.LatestBlog = ensonyayinlananblog;
+           // dashboard.TotalCommentCount = toplamyorumsayisi;
+           // dashboard.MostCommentedBlog = encokyorumalanblog;
+            dashboard.TodayCommentCount = bugunyapilanyorumsayisi;
+
+
+
+
+
+            return View(dashboard);
         }
 
         public IActionResult Blogs()
@@ -107,5 +150,55 @@ namespace blogv1.Controllers
             _context.SaveChanges();
             return RedirectToAction("Comments");
         }
+
+        public IActionResult Register() { 
+        
+            return View();
+        }
+
+        //bir kayıt ıslemı yapıcaz yanı post ve regıstervıewmodel turunde bır model alıcam kullanıcıdan
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            //burada sifre olusturuken buyuk harf kucuk harf sayi 6 karekter ve simge gerekli buna dıkkat etmeli simge de gerekiyormus
+            if (model.Password == model.RePassword)
+            {
+                var user = new BlogIdentityUser
+                {
+                    Name = model.Name,
+                    Surname = model.Surname,
+                    Email = model.Email,
+                    UserName = model.Email,
+                };
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    return View();
+                }
+            }
+            else
+            {
+                return View();
+            }
+        }
+
+        public async Task<IActionResult> LogOut()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Blogs"); //once actıon sonra route
+        }
+
+        public IActionResult Contact()
+        {
+            var contact = _context.Contacts.ToList();
+            return View(contact);
+        }
+
+
     }
 }

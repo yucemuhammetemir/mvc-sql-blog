@@ -13,7 +13,7 @@ builder.Services.AddDbContext<BlogDbContext>();
 builder.Services.AddDbContext<BlogIdentityDbContext>(options =>
 {
     var configuration = builder.Configuration;
-    var connectionString = configuration.GetConnectionString("Default Connection");
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
 
@@ -21,7 +21,7 @@ builder.Services.AddDbContext<BlogIdentityDbContext>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "Blogs/Index";
+        options.LoginPath ="Blogs/Index";
     });
 
 builder.Services.AddIdentity<BlogIdentityUser,BlogIdentityRole>()
@@ -44,10 +44,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=Blogs}/{action=Index}/{id?}");
 
 app.Run();

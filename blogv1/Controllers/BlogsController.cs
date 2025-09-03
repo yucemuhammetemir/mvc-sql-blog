@@ -1,5 +1,8 @@
 ﻿using blogv1.Context;
+using blogv1.Identity;
 using blogv1.Models;
+using blogv1.Models.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace blogv1.Controllers
@@ -7,10 +10,17 @@ namespace blogv1.Controllers
     public class BlogsController : Controller
     {
         private readonly BlogDbContext _context;
+        //admınde kullandıgımız usermangaerı kullancaz
+        private readonly UserManager<BlogIdentityUser> _userManager;
+        //ctrl . add parameters yapıp alta verıoz
+        //alttakı de bızım logın ıslemlerı ıcın sunulan ıslem
+        private readonly SignInManager<BlogIdentityUser> _signInManager;
 
-        public BlogsController(BlogDbContext context)
+        public BlogsController(BlogDbContext context, UserManager<BlogIdentityUser> userManager, SignInManager<BlogIdentityUser> signInManager)
         {
             _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }//verıtabanı baglantısını yapıyor
 
         public IActionResult Index()//blogsun ıcındekı ındexe lıst sekllınde ındex gonderme
@@ -74,7 +84,35 @@ namespace blogv1.Controllers
             return View();
         }
 
+        public IActionResult Login()//bu ana sayfayı olusturmak ıcın
+        {
 
+            return View();
+
+        }
+
+        //login için bır post yapıcaz
+        [HttpPost]
+        //hep asenkron kullannıcaz cunku bu ıslemın yapılmasını beklememız gerekıyor
+        public async Task<IActionResult> Login(LoginViewModel model) //bu actıon ıcın
+        { //await bekledıgımız ııcn
+            var user = await _userManager.FindByEmailAsync(model.Email);//emailden kullanıcıuyı buluyor
+            if(user == null)
+            {
+                return View(); //tekrardan logını dondursun bu kullanıcı yoksa
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password,true,false);
+            //parametrelerını gırdık fonkun
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Index", "Admin"); //basarılıysa
+            }
+            else
+            {
+                return View();
+            }
+        }
 
 
     }
